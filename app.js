@@ -45,6 +45,7 @@ app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument))
 app.use("/movies", moviesRouter);
 app.use("/people", peopleRouter);
 app.use("/user", usersRouter);
+app.use('/', swaggerUI.serve, swaggerUI.setup(swaggerDocument, options))
 
 app.get("/knex", function (req, res, next) {
   req.db.raw("SELECT VERSION()")
