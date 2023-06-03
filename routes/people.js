@@ -27,7 +27,6 @@ router.get("/:nconst", authorization, (req, res) => {
             roles: roles,
           }
           res.json(mapped);
-          res.status(200).json({  message: "User created" });
       })
       .catch((err) => {
         if(res.status(400)){res.status(400).json({ error:true, message: err.message });}
