@@ -16,3 +16,5 @@ The SQL database consists of the following tables:<br/>
 &ensp; &ensp; •	ratings – containing ratings from IMDB, Rotten Tomatoes and Metacritic<br/>
 &ensp; &ensp; •	ratingsold – (not utilised in this project)<br/>
 &ensp; &ensp; •	users - containg information about the users  <br/>
+# Setup
+
