@@ -17,4 +17,13 @@ The SQL database consists of the following tables:<br/>
 &ensp; &ensp; •	ratingsold – (not utilised in this project)<br/>
 &ensp; &ensp; •	users - containg information about the users  <br/>
 # Setup
+In order to run the application locally first clone the repository and open it in an IDE locally.<br/>
+Start by installing the node modules:<br/>
+### `npm install`
+In the project directory you can then run: 
+### `npm start`
+Open https://localhost:3000/ to view it locally.
+
+# Demo
+![Page.png](/docs/Page.png)
 
