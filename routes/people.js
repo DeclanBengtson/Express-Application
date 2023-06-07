@@ -10,15 +10,48 @@ router.get('/', function(req, res, next) {
     res.render('index', { title: 'Express' });
   });
 
+//character parser
+const charactersParser = (str) => {
+  if (str === "") {
+    return [];
+  }
+
+  const replaced = str.replaceAll(`["`, "").replaceAll(`"]`, "");
+  const split = replaced.split('","');
+
+  return split;
+};
+
 // GET /people/{id}
-router.get("/:nconst", authorization, (req, res) => {
+router.get("/:nconst", function (req, res, next) {
+  const nconst = req.params.nconst;
+  const authorizationHeader = req.headers["authorization"];
+  console.log(req.headers);
+
+  // Check if nconst is invalid (e.g., empty or contains invalid characters)
+  if (!nconst || !/^[a-zA-Z0-9]+$/.test(nconst)) {
+    res.status(400).json({ error: true, message: "Invalid query parameters: nconst. Query parameters are not permitted." });
+    return;
+  }
+
+  if (!("authorization" in req.headers)
+  || !req.headers.authorization.match(/^Bearer /)){
+    console.log(authorizationHeader);
+    res.status(401).json({
+      error: true,
+      message: "Authorization header ('Bearer token') not found",
+    });
+    return;
+  }
+  //console.log(authorizationHeader);
   req.db
     .from("principals")
-    .where("principals.nconst", "=", req.params.nconst)
+    .where("principals.nconst", "=", nconst)
     .join("names", "names.nconst", "=", "principals.nconst")
     .join("basics", "basics.tconst", "=", "principals.tconst")
     .select(
       "basics.primaryTitle as movieName",
+      req.db.raw('CAST(basics.imdbRating AS DECIMAL(3,1)) as imdbRating'),
       "principals.tconst as movieId",
       "principals.category",
       "principals.characters",
@@ -39,8 +72,8 @@ router.get("/:nconst", authorization, (req, res) => {
         movieName: item.movieName,
         movieId: item.movieId,
         category: item.category,
-        characters: [item.characters],
-        imdbRating: "",
+        characters: charactersParser(item.characters),
+        imdbRating: parseFloat(item.imdbRating),
       }));
 
       const mapped = {
@@ -52,18 +85,12 @@ router.get("/:nconst", authorization, (req, res) => {
       res.status(200).json(mapped);
     })
     .catch((err) => {
-      if (res.status(400)) {
-        res.status(400).json({ error: true, message: err.message });
-      }
-      if (res.status(401)) {
-        console.log(err)
-        res.status(401).json({ error: true, message: err.message });
-      }
-      if (res.status(404)) {
-        res.status(404).json({ error: true, message: err.message });
-      }
+      console.log(err);
+      res.status(500).json({ error: true, message: "Internal server error" });
     });
 });
+
+
 
 
 

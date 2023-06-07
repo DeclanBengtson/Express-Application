@@ -153,56 +153,55 @@ router.post('/refresh', function (req, res, next) {
 //POST /user/logout
 router.post('/logout', function (req, res, next) {
   const refreshToken = req.body.refreshToken;
-  const email = req.body.email;
 
   if (!refreshToken) {
     res.status(400).json({ error: true, message: "Request body incomplete, refresh token required" });
     return;
   }
 
-  console.log(email);
-
   req.db
     .from("users")
     .select("refreshToken")
-    .where("email", "=", email)
+    .where("refreshToken", "=", refreshToken)
     .then((user) => {
-      if (!user || user.refreshToken !== refreshToken) {
-        res.status(401).json({ error: true, message: "Invalid refresh token" });
+      if (!user || user.length === 0) {
+        res.status(401).json({ error: true, message: "Invalid JWT token" });
         return;
       }
 
-      // Proceed with token invalidation
+      const bearerToken = jwt.sign({ refreshToken }, process.env.JWT_SECRET, { expiresIn: 600 });
+      const newRefreshToken = jwt.sign({ refreshToken }, process.env.JWT_SECRET, { expiresIn: 86400 });
+
+      // Proceed with token invalidation and refreshing
       req.db
         .from("users")
-        .where("email", "=", email)
-        .delete("refreshToken")
+        .where("refreshToken", "=", refreshToken)
+        .update({ refreshToken: newRefreshToken })
         .then(() => {
-          res.status(200).json({ error: false, message: "Token successfully invalidated" });
+          res.status(200).json({
+            bearerToken: {
+              token: bearerToken,
+              token_type: "Bearer",
+              expires_in: 600
+            },
+            refreshToken: {
+              token: newRefreshToken,
+              token_type: "Refresh",
+              expires_in: 86400
+            }
+          });
         })
         .catch((e) => {
           console.log(e);
-          if (res.status(400)) {
-            res.status(400).json({ error: true, message: "Request body incomplete, refresh token required" });
-          }
-          if (res.status(401)) {
-            res.status(401).json({ error: true, message: "Invalid JWT token" });
-          }
-          if (res.status(429)) {
-            res.status(429).json({ error: true, message: e.message });
-          }
+          res.status(500).json({ error: true, message: "Internal server error" });
         });
     })
     .catch((e) => {
       console.log(e);
-      if (res.status(401)) {
-        res.status(401).json({ error: true, message: "Invalid JWT token" });
-      }
-      if (res.status(429)) {
-        res.status(429).json({ error: true, message: e.message });
-      }
+      res.status(500).json({ error: true, message: "Internal server error" });
     });
 });
+
 
 
 // GET /user/{email}/profile

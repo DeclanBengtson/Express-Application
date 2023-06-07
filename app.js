@@ -66,6 +66,10 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
+  if (err.status === 404) {
+    res.status(404).json({ error: true, message: "Not Found" });
+    return;
+  }
 
   // set locals, only providing error in development
   res.locals.message = err.message;
